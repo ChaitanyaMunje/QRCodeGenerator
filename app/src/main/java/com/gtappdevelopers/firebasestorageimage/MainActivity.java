@@ -2,77 +2,66 @@ package com.gtappdevelopers.firebasestorageimage;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.graphics.Bitmap;
-import android.graphics.Point;
+import android.net.Uri;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
-import android.view.Display;
-import android.view.View;
-import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.Toast;
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
+import com.google.android.exoplayer2.extractor.ExtractorsFactory;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelector;
+import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
+import com.google.android.exoplayer2.upstream.BandwidthMeter;
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 
-import com.google.zxing.WriterException;
-
-import androidmads.library.qrgenearator.QRGContents;
-import androidmads.library.qrgenearator.QRGEncoder;
 
 public class MainActivity extends AppCompatActivity {
 
-    //vaiables for imageview,edittext,button, bitmap and qrencoder.
-    private ImageView qrCodeIV;
-    private EditText dataEdt;
-    private Button generateQrBtn;
-    Bitmap bitmap;
-    QRGEncoder qrgEncoder;
+    //creating a variable for exoplayerview.
+    SimpleExoPlayerView exoPlayerView;
+    //creating a variable for exoplayer
+    SimpleExoPlayer exoPlayer;
+    //url of video which we are loading.
+    String videoURL="https://media.geeksforgeeks.org/wp-content/uploads/20201217163353/Screenrecorder-2020-12-17-16-32-03-350.mp4";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //initializing all variables.
-        qrCodeIV = findViewById(R.id.idIVQrcode);
-        dataEdt = findViewById(R.id.idEdt);
-        generateQrBtn = findViewById(R.id.idBtnGenerateQR);
+        exoPlayerView=findViewById(R.id.idExoPlayerVIew);
+        try {
+            //bandwisthmeter is used for getting default bandwidth
+            BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
+            // track selector is used to navigate between video using a default seekbar.
+            TrackSelector trackSelector = new DefaultTrackSelector(new AdaptiveTrackSelection.Factory(bandwidthMeter));
+            //we are ading our track selector to exoplayer.
+            exoPlayer= ExoPlayerFactory.newSimpleInstance(this,trackSelector);
+            // we are parsing a video url and parsing its video uri.
+            Uri videouri= Uri.parse(videoURL);
+            // we are creating a variable for datasource factory and setting its user agent as 'exoplayer_view'
+            DefaultHttpDataSourceFactory dataSourceFactory=new DefaultHttpDataSourceFactory("exoplayer_video");
+            // we are creating a variable for extractor factory and setting it to default extractor factory.
+            ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
+            //we are creating a media source with above variables and passing our event handler as null,
+            MediaSource mediaSource = new ExtractorMediaSource(videouri,dataSourceFactory,extractorsFactory,null,null);
+            //inside our exoplayer view we are setting our player
+            exoPlayerView.setPlayer(exoPlayer);
+            //we are preparing our exoplayer with media source.
+            exoPlayer.prepare(mediaSource);
+            //we are setting our exoplayer when it is ready.
+            exoPlayer.setPlayWhenReady(true);
 
-        //intializing onclick listner for button.
-        generateQrBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (TextUtils.isEmpty(dataEdt.getText().toString())) {
-                    //if the edittext inputs are empty then execute this method showing a toast message.
-                    Toast.makeText(MainActivity.this, "Enter some text to generate QR Code", Toast.LENGTH_SHORT).show();
-                } else {
+        }catch (Exception e){
+            // below line is used for handling our errors.
+            Log.e("TAG","Error : "+e.toString());
 
-                    //below line is for getting the windowmanager service.
-                    WindowManager manager = (WindowManager) getSystemService(WINDOW_SERVICE);
-                    //initializing a variable for default display.
-                    Display display = manager.getDefaultDisplay();
-                    //creating a variable for point which is to be displayed in QR Code.
-                    Point point = new Point();
-                    display.getSize(point);
-                    //getting width and height of a point
-                    int width = point.x;
-                    int height = point.y;
-                    //generating dimension from width and height.
-                    int dimen = width < height ? width : height;
-                    dimen = dimen * 3 / 4;
-                    //setting this dimensions inside our qr code encoder to generate our qr code.
-                    qrgEncoder = new QRGEncoder(dataEdt.getText().toString(), null, QRGContents.Type.TEXT, dimen);
-                    try {
-                        //getting our qrcode in the form of bitmap.
-                        bitmap = qrgEncoder.encodeAsBitmap();
-                        // the bitmap is set inside our image view using .setimagebitmap method.
-                        qrCodeIV.setImageBitmap(bitmap);
-                    } catch (WriterException e) {
-                        //this method is called for exception handling.
-                        Log.e("Tag", e.toString());
-                    }
-                }
-            }
-        });
+        }
+
+
     }
 }

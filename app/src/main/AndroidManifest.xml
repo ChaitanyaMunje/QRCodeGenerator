@@ -2,6 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.gtappdevelopers.firebasestorageimage">
 
+    <!--INternet permission and network access permission-->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
